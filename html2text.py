@@ -30,7 +30,7 @@ try: #Python3
     import urllib.request as urllib
 except:
     import urllib
-import optparse, re, sys, codecs, types
+import optparse, re, sys, codecs
 
 try: from textwrap import wrap
 except: pass
@@ -52,7 +52,7 @@ BODY_WIDTH = 78
 SKIP_INTERNAL_LINKS = True
 
 # Use inline, rather than reference, formatting for images and links
-INLINE_LINKS = True
+INLINE_LINKS = True 
 
 # Number of pixels Google indents nested lists
 GOOGLE_LIST_INDENT = 36
@@ -779,11 +779,16 @@ md_backslash_matcher = re.compile(r'''
     (?=[%s])      # followed by a char that requires escaping
     ''' % re.escape(slash_chars),
     flags=re.VERBOSE)
+reference_links_matcher = re.compile(r"^   \[\d+\]\: ")
 
 def skipwrap(para):
     # If the text begins with four spaces or one tab, it's a code block; don't wrap
     if para[0:4] == '    ' or para[0] == '\t':
         return True
+    # If the text is a reference link line, don't wrap
+    if reference_links_matcher.match(para):
+        return True
+
     # If the text begins with only two "--", possibly preceded by whitespace, that's
     # an emdash; so wrap.
     stripped = para.lstrip()
@@ -842,6 +847,8 @@ def main():
         default=IGNORE_ANCHORS, help="don't include any formatting for links")
     p.add_option("--ignore-images", dest="ignore_images", action="store_true",
         default=IGNORE_IMAGES, help="don't include any formatting for images")
+    p.add_option("--reference-links", dest="reference_links", action="store_true",
+        default=not INLINE_LINKS, help="Set links to be reference instead of inline")
     p.add_option("-g", "--google-doc", action="store_true", dest="google_doc",
         default=False, help="convert an html-exported Google Document")
     p.add_option("-d", "--dash-unordered-list", action="store_true", dest="ul_style_dash",
@@ -902,6 +909,7 @@ def main():
     h.list_indent = options.list_indent
     h.ignore_emphasis = options.ignore_emphasis
     h.ignore_links = options.ignore_links
+    h.inline_links = not options.reference_links
     h.ignore_images = options.ignore_images
     h.google_doc = options.google_doc
     h.hide_strikethrough = options.hide_strikethrough
